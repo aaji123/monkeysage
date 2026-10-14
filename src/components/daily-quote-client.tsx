@@ -23,40 +23,28 @@ function getOrCreateUserId(): string | null {
   }
 }
 
-async function fetchUserQuote(userId: string): Promise<DailyQuote | null> {
-  const response = await fetch("/api/daily-quote", {
-    method: "POST",
-    cache: "no-store",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId }),
-  });
-
-  if (!response.ok) {
-    return null;
-  }
-
-  const result: unknown = await response.json();
-
-  if (
-    typeof result !== "object" ||
-    result === null ||
-    !("quoteText" in result) ||
-    typeof result.quoteText !== "string" ||
-    !("category" in result) ||
-    typeof result.category !== "string"
-  ) {
-    return null;
-  }
-
-  return { quoteText: result.quoteText, category: result.category };
-}
-
 function utcDateKey(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
-export function DailyQuoteClient({ initialQuote }: { initialQuote: DailyQuote }) {
+function formatDate(date: string): string {
+  return new Intl.DateTimeFormat("en", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${date}T00:00:00.000Z`));
+}
+
+export function DailyQuoteClient({
+  initialQuote,
+  initialDate,
+}: {
+  initialQuote: DailyQuote;
+  initialDate: string;
+}) {
   const [quote, setQuote] = useState(initialQuote);
+  const [date, setDate] = useState(initialDate);
 
   useEffect(() => {
     let active = true;
@@ -65,19 +53,37 @@ export function DailyQuoteClient({ initialQuote }: { initialQuote: DailyQuote })
 
     const refreshForCurrentDate = async () => {
       const userId = getOrCreateUserId();
+      if (!userId) return;
 
-      if (!userId) {
-        return;
-      }
+      const requestedDate = utcDateKey(new Date());
 
       try {
-        const userQuote = await fetchUserQuote(userId);
+        const response = await fetch("/api/daily-quote", {
+          method: "POST",
+          cache: "no-store",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId }),
+        });
 
-        if (active && userQuote) {
-          setQuote(userQuote);
+        if (!response.ok) return;
+
+        const result: unknown = await response.json();
+        if (
+          active &&
+          typeof result === "object" &&
+          result !== null &&
+          "date" in result &&
+          result.date === requestedDate &&
+          "quoteText" in result &&
+          typeof result.quoteText === "string" &&
+          "category" in result &&
+          typeof result.category === "string"
+        ) {
+          setQuote({ quoteText: result.quoteText, category: result.category });
+          setDate(result.date);
         }
       } catch {
-        // Keep the server-rendered global quote if storage or networking fails.
+        // Keep the server-rendered quote if storage or networking fails.
       }
     };
 
@@ -99,7 +105,6 @@ export function DailyQuoteClient({ initialQuote }: { initialQuote: DailyQuote })
 
     const handleVisibilityChange = () => {
       const today = utcDateKey(new Date());
-
       if (document.visibilityState === "visible" && today !== currentDate) {
         currentDate = today;
         void refreshForCurrentDate();
@@ -121,8 +126,19 @@ export function DailyQuoteClient({ initialQuote }: { initialQuote: DailyQuote })
   return (
     <>
       <figure className="wisdom-scroll">
-        <blockquote className="wisdom-quote">&ldquo;{quote.quoteText}&rdquo;</blockquote>
-        <figcaption className="wisdom-category">{quote.category}</figcaption>
+        <div className="scroll-roller scroll-roller-top" aria-hidden="true" />
+        <div className="scroll-paper">
+          <blockquote className="wisdom-quote" id="daily-quote-text">
+            &ldquo;{quote.quoteText}&rdquo;
+          </blockquote>
+          <figcaption className="wisdom-category" id="daily-quote-category">
+            {quote.category}
+          </figcaption>
+          <time className="wisdom-date" dateTime={date}>
+            {formatDate(date)}
+          </time>
+        </div>
+        <div className="scroll-roller scroll-roller-bottom" aria-hidden="true" />
       </figure>
       <ShareButton quoteText={quote.quoteText} />
     </>

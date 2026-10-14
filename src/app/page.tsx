@@ -14,6 +14,7 @@ export default function Home() {
 async function DailyWisdom() {
   await io();
   const result = await getDailyQuote();
+  const date = new Date().toISOString().slice(0, 10);
 
   return (
     <main className="sage-page">
@@ -26,7 +27,7 @@ async function DailyWisdom() {
           <h1 id="page-title">Monkey Sage</h1>
         </header>
 
-        <DailyQuoteClient initialQuote={result.quote} />
+        <DailyQuoteClient initialQuote={result.quote} initialDate={date} />
 
         <p className="sage-footer">Check in daily for new wisdom.</p>
       </section>
@@ -42,6 +43,11 @@ function WisdomLoading() {
           🐒
         </div>
         <p className="sage-overline">Unrolling today&apos;s scroll</p>
+        <div className="wisdom-scroll wisdom-scroll-loading" aria-hidden="true">
+          <div className="scroll-roller scroll-roller-top" />
+          <div className="scroll-paper" />
+          <div className="scroll-roller scroll-roller-bottom" />
+        </div>
       </section>
     </main>
   );
