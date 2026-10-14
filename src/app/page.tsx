@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { io } from "next/cache";
-import { ShareButton } from "@/components/share-button";
+import { DailyQuoteClient } from "@/components/daily-quote-client";
 import { getDailyQuote } from "@/lib/quotes";
 
 export default function Home() {
@@ -26,15 +26,7 @@ async function DailyWisdom() {
           <h1 id="page-title">Monkey Sage</h1>
         </header>
 
-        <figure className="wisdom-scroll">
-          <blockquote className="wisdom-quote">
-            &ldquo;{result.quote.quoteText}&rdquo;
-          </blockquote>
-          <figcaption className="wisdom-category">
-            {result.quote.category}
-          </figcaption>
-        </figure>
-        <ShareButton quoteText={result.quote.quoteText} />
+        <DailyQuoteClient initialQuote={result.quote} />
 
         <p className="sage-footer">Check in daily for new wisdom.</p>
       </section>

@@ -1,4 +1,5 @@
 import "server-only";
+import { getQuoteIndex } from "@/lib/quote-sequence";
 import { getSupabaseClient } from "@/lib/supabase";
 
 export type DailyQuote = {
@@ -18,6 +19,7 @@ const MILLISECONDS_PER_DAY = 86_400_000;
 
 export async function getDailyQuote(
   now: Date = new Date(),
+  userId?: string,
 ): Promise<DailyQuoteResult> {
   try {
     const supabase = getSupabaseClient();
@@ -50,7 +52,12 @@ export async function getDailyQuote(
       return { kind: "quote", quote: FALLBACK_QUOTE };
     }
 
-    const quoteIndex = getQuoteIndex(daysSinceLaunch(now), count);
+    const quoteIndex = getQuoteIndex(daysSinceLaunch(now), count, userId);
+
+    if (quoteIndex === null) {
+      return { kind: "quote", quote: FALLBACK_QUOTE };
+    }
+
     const { data, error } = await supabase
       .from("quotes")
       .select("quote_text, category")
@@ -89,39 +96,4 @@ function daysSinceLaunch(now: Date): number {
   const launchDay = Date.parse(`${LAUNCH_DATE}T00:00:00.000Z`);
 
   return Math.max(0, Math.floor((today - launchDay) / MILLISECONDS_PER_DAY));
-}
-
-function getQuoteIndex(days: number, quoteCount: number): number {
-  const cycle = Math.floor(days / quoteCount);
-  const position = days % quoteCount;
-  const start = hash32(`monkey-sage:${cycle}:start`) % quoteCount;
-  let stride = (hash32(`monkey-sage:${cycle}:stride`) % quoteCount) || 1;
-
-  while (greatestCommonDivisor(stride, quoteCount) !== 1) {
-    stride = (stride + 1) % quoteCount || 1;
-  }
-
-  return (start + position * stride) % quoteCount;
-}
-
-function hash32(value: string): number {
-  let hash = 0x811c9dc5;
-
-  for (let index = 0; index < value.length; index += 1) {
-    hash ^= value.charCodeAt(index);
-    hash = Math.imul(hash, 0x01000193);
-  }
-
-  return hash >>> 0;
-}
-
-function greatestCommonDivisor(left: number, right: number): number {
-  let a = left;
-  let b = right;
-
-  while (b !== 0) {
-    [a, b] = [b, a % b];
-  }
-
-  return a;
 }

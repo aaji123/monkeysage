@@ -1,33 +1,9 @@
 import { getDailyQuote } from "@/lib/quotes";
 
-export async function GET() {
-  const now = new Date();
-  const result = await getDailyQuote(now);
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-  if (result.kind !== "quote") {
-    return Response.json(
-      {
-        error:
-          result.kind === "empty"
-            ? "The quote collection is empty."
-            : "Today's wisdom is temporarily unavailable.",
-      },
-      {
-        status: 503,
-        headers: { "Cache-Control": "no-store" },
-      },
-    );
-  }
-
-  const nextUtcMidnight = Date.UTC(
-    now.getUTCFullYear(),
-    now.getUTCMonth(),
-    now.getUTCDate() + 1,
-  );
-  const secondsUntilUtcMidnight = Math.max(
-    1,
-    Math.floor((nextUtcMidnight - now.getTime()) / 1000),
-  );
+async function createQuoteResponse(now: Date, userId?: string) {
+  const result = await getDailyQuote(now, userId);
 
   return Response.json(
     {
@@ -37,8 +13,47 @@ export async function GET() {
     },
     {
       headers: {
-        "Cache-Control": `public, max-age=0, s-maxage=${secondsUntilUtcMidnight}, stale-while-revalidate=60`,
+        "Cache-Control": userId
+          ? "private, no-store"
+          : `public, max-age=0, s-maxage=${secondsUntilUtcMidnight(now)}, stale-while-revalidate=60`,
       },
     },
   );
+}
+
+function secondsUntilUtcMidnight(now: Date): number {
+  const nextUtcMidnight = Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate() + 1,
+  );
+
+  return Math.max(1, Math.floor((nextUtcMidnight - now.getTime()) / 1000));
+}
+
+export async function GET() {
+  const now = new Date();
+  return createQuoteResponse(now);
+}
+
+export async function POST(request: Request) {
+  let userId: string | undefined;
+
+  try {
+    const body: unknown = await request.json();
+
+    if (
+      typeof body === "object" &&
+      body !== null &&
+      "userId" in body &&
+      typeof body.userId === "string" &&
+      UUID_PATTERN.test(body.userId)
+    ) {
+      userId = body.userId.toLowerCase();
+    }
+  } catch {
+    // Missing or invalid IDs fall back to the global quote.
+  }
+
+  return createQuoteResponse(new Date(), userId);
 }
