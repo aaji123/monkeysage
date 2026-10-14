@@ -34,22 +34,11 @@ npm run build
 ## Deploy to Vercel
 
 1. Push this repository to GitHub and import it from the Vercel dashboard.
-2. Set the Vercel project root directory to `ancient-monkey-wisdom` and keep the detected Next.js build settings (`npm run build`).
+2. Keep the Vercel project root at the repository root (the directory containing `package.json`) and use the detected Next.js build settings (`npm run build`).
 3. Add these two environment variables for Production (and Preview if you use preview deployments):
 	- `NEXT_PUBLIC_SUPABASE_URL` = your Supabase project URL
 	- `NEXT_PUBLIC_SUPABASE_ANON_KEY` = your Supabase anon/publishable key
 4. Confirm the public `quotes` table is seeded and anonymous read access is enabled by the SQL migrations.
 5. Deploy. Vercel supplies HTTPS automatically, which is required for service workers and PWA installation.
 
-The Supabase service-role key is only needed locally for `npm run seed:quotes`; do not add it to Vercel. The Open Graph URL uses Vercel's `VERCEL_URL` automatically. The share fallback text names `monkeysage.com` as requested; update it if you deploy on a different permanent domain.
-
-## Native Mobile App
-
-The Expo iOS/Android app is in `mobile/` and reads the same quote through `/api/daily-quote`.
-
-1. Deploy the Next.js site over HTTPS, then create `mobile/.env.local` with `EXPO_PUBLIC_API_URL=https://your-deployed-site.example.com`.
-2. From `mobile/`, run `npm start` and open the project in Expo Go to preview it on a device.
-3. For store builds, set the API URL in EAS, replace the placeholder bundle/package ID in `mobile/app.json` with an identifier you control, then run `npx eas-cli@latest login`, `npx eas-cli@latest init`, and `npx eas-cli@latest build --platform all --profile production`.
-4. Submit the Android build with `npx eas-cli@latest submit --platform android --latest`; submit iOS with `npx eas-cli@latest submit --platform ios --latest`.
-
-Store release requires Google Play Console and Apple Developer Program accounts, signing credentials, store listings, privacy details, and review. EAS can build iOS in the cloud from Windows; it does not publish listings or guarantee store approval.
+The Supabase service-role key is only needed locally for `npm run seed:quotes`; do not add it to Vercel. The Open Graph URL uses Vercel's deployment hostname automatically and falls back to `https://monkeysage.vercel.app`. The share fallback names `monkeysage.vercel.app`.

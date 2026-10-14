@@ -10,7 +10,7 @@ const siteUrl = vercelHost
   ? `https://${vercelHost}`
   : process.env.NODE_ENV === "development"
     ? "http://localhost:3000"
-    : "https://monkeysage.com";
+    : "https://monkeysage.vercel.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
