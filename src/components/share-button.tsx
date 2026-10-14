@@ -11,7 +11,7 @@ export function ShareButton({ quoteText }: ShareButtonProps) {
 
   async function shareQuote() {
     const rootUrl = new URL("/", window.location.href).toString();
-    const shareText = `Today's wisdom from the Monkey Sage: ${quoteText} - monkeysage.vercel.app`;
+    const shareText = `Today's wisdom from the Monkey Sage: ${quoteText}`;
     const shareData = {
       title: "Monkey Sage - Daily Wisdom",
       text: shareText,

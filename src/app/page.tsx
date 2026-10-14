@@ -1,7 +1,11 @@
 import { Suspense } from "react";
 import { io } from "next/cache";
+import { cookies } from "next/headers";
 import { DailyQuoteClient } from "@/components/daily-quote-client";
 import { getDailyQuote } from "@/lib/quotes";
+
+const USER_ID_COOKIE = "monkey_sage_user_id";
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export default function Home() {
   return (
@@ -13,7 +17,12 @@ export default function Home() {
 
 async function DailyWisdom() {
   await io();
-  const result = await getDailyQuote();
+  const cookieStore = await cookies();
+  const cookieUserId = cookieStore.get(USER_ID_COOKIE)?.value;
+  const userId = cookieUserId && UUID_PATTERN.test(cookieUserId)
+    ? cookieUserId.toLowerCase()
+    : undefined;
+  const result = await getDailyQuote(undefined, userId);
   const date = new Date().toISOString().slice(0, 10);
 
   return (

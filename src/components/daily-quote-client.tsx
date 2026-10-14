@@ -5,18 +5,26 @@ import type { DailyQuote } from "@/lib/quotes";
 import { ShareButton } from "@/components/share-button";
 
 const USER_ID_KEY = "monkey_sage_user_id";
+const USER_ID_COOKIE = "monkey_sage_user_id";
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function syncUserIdCookie(userId: string): void {
+  document.cookie = `${USER_ID_COOKIE}=${encodeURIComponent(userId)}; Max-Age=31536000; Path=/; SameSite=Lax`;
+}
 
 function getOrCreateUserId(): string | null {
   try {
     const storedUserId = window.localStorage.getItem(USER_ID_KEY);
 
     if (storedUserId && UUID_PATTERN.test(storedUserId)) {
-      return storedUserId.toLowerCase();
+      const userId = storedUserId.toLowerCase();
+      syncUserIdCookie(userId);
+      return userId;
     }
 
     const userId = window.crypto.randomUUID();
     window.localStorage.setItem(USER_ID_KEY, userId);
+    syncUserIdCookie(userId);
     return userId;
   } catch {
     return null;
