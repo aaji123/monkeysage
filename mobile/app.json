@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Monkey Sage",
+    "slug": "monkey-sage-mobile",
+    "scheme": "monkeysage",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.monkeysage.dailywisdom",
+      "backgroundColor": "#F1E7D5",
+      "buildNumber": "1"
+    },
+    "android": {
+      "package": "com.monkeysage.dailywisdom",
+      "versionCode": 1,
+      "backgroundColor": "#F1E7D5",
+      "adaptiveIcon": {
+        "backgroundColor": "#F1E7D5",
+        "foregroundImage": "./assets/android-icon-foreground.png"
+      },
+      "predictiveBackGestureEnabled": true
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
