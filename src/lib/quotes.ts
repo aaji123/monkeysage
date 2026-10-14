@@ -14,6 +14,10 @@ const FALLBACK_QUOTE: DailyQuote = {
   category: "General",
 };
 
+// Keep removed quotes out of both the server-rendered quote and the client refresh
+// while older database rows are still present.
+const REMOVED_QUOTE_TEXT = "Many monkey chase butterfly. One monkey watch flower. Butterfly come to flower.";
+
 const LAUNCH_DATE = "2026-10-14";
 const MILLISECONDS_PER_DAY = 86_400_000;
 
@@ -32,6 +36,7 @@ export async function getDailyQuote(
     const { count, error: countError } = await supabase
       .from("quotes")
       .select("id", { count: "exact" })
+      .neq("quote_text", REMOVED_QUOTE_TEXT)
       .limit(1);
 
     if (countError) {
@@ -61,6 +66,7 @@ export async function getDailyQuote(
     const { data, error } = await supabase
       .from("quotes")
       .select("quote_text, category")
+      .neq("quote_text", REMOVED_QUOTE_TEXT)
       .order("created_at", { ascending: true })
       .order("id", { ascending: true })
       .range(quoteIndex, quoteIndex)
